@@ -51,12 +51,14 @@ Jika ingin membatalkan progres lama dan mengumpulkan ulang atau mengganti semest
 
 1. Simpan project di repository Git. Jangan commit `.env`, log lokal, atau file berisi kredensial.
 2. Di Vercel, pilih **Add New → Project**, lalu impor repository.
-3. Pilih framework **Other**, Node.js **24.x**. Build command `npm run build`, output directory `public`; konfigurasi ini juga ada di `vercel.json`.
+3. Pilih framework **Other**, Node.js **24.x**. Build command `npm run build`, output directory `public`. Root Directory harus menunjuk folder yang berisi `package.json` dan `vercel.json`. Konfigurasi `framework: null` dalam `vercel.json` memaksa preset Other agar Vercel memakai halaman statis dan fungsi pada `/api/*`.
 4. Di **Environment Variables**, isi `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, dan `SYNC_SECRET`. Terapkan pada Production; isi Preview hanya jika preview memang boleh menggunakan database tersebut.
 5. Deploy. Build hanya mempublikasikan halaman database, halaman pengelola, dan aset frontend. Penghubung database berjalan sebagai Vercel Functions pada `/api/*`.
 6. Buka domain deployment. Periksa hasil pencarian dan pagination. Buka `/admin.html` untuk memeriksa progres atau memperbarui data.
 
 Database kosong akan menampilkan petunjuk sinkronisasi. Konfigurasi yang belum lengkap menampilkan kesalahan setup; aplikasi tidak berpindah ke dataset lama atau contoh. Akses API PDDIKTI dari Vercel tetap perlu diuji setelah deployment. Jika akses sumber dari Vercel bermasalah, jalankan `npm run sync` dari komputer untuk memperbarui Supabase; website Vercel tetap membaca database yang sama.
+
+Jika build menampilkan `No entrypoint found`, periksa bahwa deployment memakai revisi terbaru yang menyertakan `framework: null`. Di Settings → Build and Deployment, pastikan Framework Preset adalah **Other**, lalu deploy ulang revisi terbaru. Aplikasi ini menggunakan halaman statis dan Vercel Functions di folder `api`; `scripts/serve-db.mjs` hanya untuk server lokal.
 
 ## 4. Pembaruan otomatis opsional
 
