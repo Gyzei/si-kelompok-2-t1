@@ -1,0 +1,10 @@
+data/
+work/
+outputs/
+tests/
+node_modules/
+.env*
+*.php
+*.cmd
+*.ps1
+.github/

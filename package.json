@@ -1,0 +1,19 @@
+{
+  "name": "dosen-aceh-pddikti",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "collect": "node --use-system-ca scripts/collect.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "serve": "node --use-system-ca scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "dev": "node --env-file-if-exists=.env --use-system-ca scripts/serve-db.mjs",
+    "sync": "node --env-file-if-exists=.env --use-system-ca scripts/sync-db.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.9"
+  }
+}

@@ -1,0 +1,29 @@
+name: Perbarui data dosen Aceh
+on:
+  workflow_dispatch:
+    inputs:
+      semester:
+        description: Semester PDDIKTI
+        default: '20261'
+        required: true
+  schedule:
+    - cron: '0 2 * * 0'
+permissions:
+  contents: read
+concurrency:
+  group: pddikti-supabase-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SYNC_SEMESTER: ${{ inputs.semester || '20261' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node scripts/sync-db.mjs "$SYNC_SEMESTER"

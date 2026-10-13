@@ -1,0 +1,14 @@
+const $=id=>document.getElementById(id);let running=false;
+const phases={pt:'Daftar perguruan tinggi',prodi:'Daftar program studi',dosen:'Homebase dosen',publish:'Menyiapkan data untuk ditampilkan',complete:'Selesai'};
+async function request(url,body){const response=await fetch(url,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+$('sync-token').value,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(310000)});const data=await response.json();if(!response.ok||data.error)throw new Error(data.error||'Permintaan belum berhasil.');return data;}
+function progress(run){$('admin-progress').replaceChildren();if(!run)return;for(const [label,value] of [['Tahap',phases[run.phase]||run.phase],['Status',run.status],['Semester',run.semester],['Halaman PT',run.total_pages?Math.min(run.cursor-1,run.total_pages)+' / '+run.total_pages:'—'],['PT diproses',run.pt_processed??'—'],['Homebase diproses',(run.prodi_processed??'—')+' / '+(run.prodi_total??'—')],['Dosen disiapkan',run.publish_offset]]){const item=document.createElement('li'),span=document.createElement('span'),strong=document.createElement('strong');span.textContent=label;strong.textContent=value;item.append(span,strong);$('admin-progress').append(item);}}
+function notice(text,error=false){$('admin-notice').textContent=text;$('admin-notice').className='notice'+(error?' error':'');}
+function controls(){ $('sync-start').disabled=running;$('sync-pause').disabled=!running;$('sync-status').disabled=running;$('sync-token').disabled=running;$('sync-semester').disabled=running;}
+$('admin-form').addEventListener('submit',async e=>{
+ e.preventDefault();running=true;controls();notice('Sinkronisasi berjalan. Progres disimpan di database.');
+ try{while(running){const result=await request('api/sync',{semester:$('sync-semester').value});if(result.run)progress(result.run);if(result.done){running=false;notice('Sinkronisasi selesai. Data terbaru sudah tampil di direktori.');break;}if(result.busy)notice('Proses lain sedang berjalan. Menunggu giliran…');await new Promise(r=>setTimeout(r,result.busy?5000:500));}}
+ catch(error){running=false;notice(error.message+' Progres tersimpan; klik Mulai / lanjutkan untuk mencoba kembali.',true);}
+ finally{running=false;controls();}
+});
+$('sync-pause').addEventListener('click',()=>{running=false;notice('Pemuatan dijeda setelah permintaan yang sedang berjalan selesai.');});
+$('sync-status').addEventListener('click',async()=>{if(!$('sync-token').value){notice('Isi kunci sinkronisasi terlebih dahulu.',true);return;}try{const result=await request('api/sync-status');progress(result.run);notice(result.run?.error||(!result.run?'Belum ada sinkronisasi.':'Progres terakhir berhasil diperiksa.'),Boolean(result.run?.error));}catch(error){notice(error.message,true);}});
