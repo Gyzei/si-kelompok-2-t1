@@ -6,9 +6,8 @@
     "node": "24.x"
   },
   "scripts": {
-    "collect": "node --use-system-ca scripts/collect.mjs",
     "test": "node --test tests/*.test.mjs",
-    "serve": "node --use-system-ca scripts/serve.mjs",
+    "serve": "node --env-file-if-exists=.env --use-system-ca scripts/serve-db.mjs",
     "build": "node scripts/build.mjs",
     "dev": "node --env-file-if-exists=.env --use-system-ca scripts/serve-db.mjs",
     "sync": "node --env-file-if-exists=.env --use-system-ca scripts/sync-db.mjs"

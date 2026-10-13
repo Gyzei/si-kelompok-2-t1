@@ -1,9 +1,9 @@
 Options -Indexes
-DirectoryIndex index.php index.html
+DirectoryIndex index.html
 <IfModule mod_rewrite.c>
 RewriteEngine On
-RewriteRule ^(?:work|scripts|tests|data|server|supabase|api|node_modules|\.git|\.github)/ - [F,L]
-RewriteRule ^(?:\.env(?:\..*)?|package(?:-lock)?\.json|vercel\.json|kumpulkan\.(?:ps1|cmd)|README\.md|SETUP-SUPABASE\.md|\.gitignore|\.vercelignore|data/\.collect\.lock)$ - [F,L]
+RewriteRule ^(?:work|outputs|scripts|tests|server|supabase|api|node_modules|\.git|\.github)/ - [F,L]
+RewriteRule ^(?:\.env(?:\..*)?|package(?:-lock)?\.json|vercel\.json|README\.md|SETUP-SUPABASE\.md|\.gitignore|\.vercelignore)$ - [F,L]
 </IfModule>
 <FilesMatch "^\.env(?:\.|$)">
 Require all denied

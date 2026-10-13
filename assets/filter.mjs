@@ -2,7 +2,7 @@ export const normalize = value => String(value ?? '').normalize('NFKD').replace(
 export const words = value => normalize(value).replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\s+/g,' ');
 export const tokens = query => words(query).split(' ').filter(Boolean);
 export const matchesText = (text,query) => tokens(query).every(token=>words(text).includes(token));
-export const institutionKey = name => words(name).replaceAll(' ','');
+
 const index=new WeakMap();
 export function invalidateSearch(row){index.delete(row);}
 function documentFor(row) {
@@ -29,3 +29,4 @@ export function filterLecturers(lecturers,filters={}) {
   if(query.terms.length)ranked.sort((a,b)=>b.score-a.score);
   return ranked.map(result=>result.row);
 }
+

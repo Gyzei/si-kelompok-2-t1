@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { deduplicate, unwrapPage, unwrapList, toCsv } from '../scripts/lib.mjs';
 import { filterLecturers } from '../assets/filter.mjs';
-import { replaceFile } from '../scripts/files.mjs';
+
 const affiliation = (id = 'prodi-a', pt = 'pt-a', status = 'Aktif') => ({ id_pt: pt, nama_pt: pt,
   id_prodi: id, nama_prodi: id, status_pt: status, semester: '20261', jenjang: 'S1' });
 const row = (values = {}) => ({ nama_dosen: 'RASYAD', id_sdm: 'source-a', nidn: '2003047301',
@@ -51,14 +51,4 @@ test('CSV escapes quotes, formulas, and retains leading-zero identifier strings'
   assert.ok(csv.startsWith('\uFEFF'));assert.ok(csv.includes('"0023028301"'));
   assert.ok(csv.includes('"\'=HYPERLINK(""x"")"'));
 });
-test('Windows snapshot replacement retries a reader lock and propagates permanent failures', async () => {
-  let attempts = 0; const delays = [];
-  await replaceFile('temporary','target',{
-    rename: async () => { if (++attempts < 3) throw Object.assign(new Error('locked'),{code:'EPERM'}); },
-    wait: async delay => delays.push(delay),
-  });
-  assert.equal(attempts,3); assert.deepEqual(delays,[50,100]);
-  await assert.rejects(replaceFile('temporary','target',{
-    rename:async()=>{throw Object.assign(new Error('missing'),{code:'ENOENT'});}, wait:async()=>{},
-  }), {code:'ENOENT'});
-});
+

@@ -1,5 +1,5 @@
 import { SOURCE } from './lib.mjs';
-import { pathToFileURL } from 'node:url';
+
 
 const clean = value => String(value ?? '').trim();
 export function selectProfile(matches, lecturer) {
@@ -40,9 +40,4 @@ export async function resolveProfile(lecturer, { fetcher = fetch } = {}) {
   } catch { return fallback('Profil langsung belum dapat diperiksa. Gunakan pencarian resmi PDDIKTI.'); }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  let input = '';
-  for await (const chunk of process.stdin) input += chunk;
-  try { process.stdout.write(JSON.stringify(await resolveProfile(JSON.parse(input)))); }
-  catch { process.stdout.write(JSON.stringify({ error:'Permintaan profil tidak valid.' })); process.exitCode = 1; }
-}
+

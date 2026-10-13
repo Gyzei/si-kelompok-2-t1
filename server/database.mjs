@@ -6,11 +6,20 @@ export class Database {
   }
   async rpc(name,params={}) {
     if(!/^da_[a-z_]+$/.test(name))throw new Error('Database function not allowed');
+    return this.request('/rest/v1/rpc/'+name,{method:'POST',body:params});
+  }
+  async table(name,{method='GET',query={},body}={}){
+    if(!['da_runs','da_state','da_programs','da_lecturers','da_affiliations'].includes(name))throw new Error('Table not allowed');
+    if(!['GET','POST','PATCH','DELETE'].includes(method))throw new Error('Method not allowed');
+    return this.request('/rest/v1/'+name+'?'+new URLSearchParams(query),{method,body});
+  }
+  async request(path,{method,body}){
     const headers={'Content-Type':'application/json',apikey:this.key};
     // New sb_secret keys belong in apikey. Legacy service_role keys are JWTs.
     if(this.key.startsWith('eyJ'))headers.Authorization='Bearer '+this.key;
+    headers.Prefer=method==='POST'?'resolution=merge-duplicates,return=representation':'return=representation';
     let response;
-    try {response=await this.fetcher(this.url+'/rest/v1/rpc/'+name,{method:'POST',headers,body:JSON.stringify(params),signal:AbortSignal.timeout(60000)});}
+    try {response=await this.fetcher(this.url+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(60000)});}
     catch {throw Object.assign(new Error('Koneksi database terputus. Coba lagi.'),{status:502,retryable:true});}
     if(!response.ok)throw Object.assign(new Error('Permintaan database gagal (HTTP '+response.status+'). Periksa skema SQL dan konfigurasi server.'),{status:502,retryable:response.status>=500||response.status===429});
     const raw=await response.text();return raw?JSON.parse(raw):null;

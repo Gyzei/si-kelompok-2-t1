@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#174b42">
   <title>Direktori Dosen Aceh · PDDIKTI</title>
   <link rel="stylesheet" href="assets/style.css">
-  <script type="module" src="assets/app.js"></script>
+  <script type="module" src="assets/database-app.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -16,14 +16,14 @@
   <main>
     <section class="intro">
       <div><p class="eyebrow">PROVINSI ACEH <span> / </span> DIREKTORI AKADEMIK</p><h1>Temukan dosen<br>di seluruh Aceh<span>.</span></h1><p class="intro-copy">Telusuri nama dosen dan program studi homebase dari perguruan tinggi yang terdaftar di PDDIKTI.</p></div>
-      <div class="intro-aside"><span class="period-label">API LANGSUNG · PERIODE PELAPORAN</span><strong id="semester">Memuat periode…</strong><span id="updated">Menghubungi PDDIKTI</span><button id="refresh" class="text-button" type="button">↻ Ambil data terbaru</button></div>
+      <div class="intro-aside"><span class="period-label">DATABASE · PERIODE PELAPORAN</span><strong id="semester">Memuat periode…</strong><span id="updated">Menghubungi PDDIKTI</span><button id="refresh" class="text-button" type="button">↻ Perbarui tampilan</button></div>
     </section>
 
     <section class="stats" aria-label="Ringkasan data">
-      <article><span id="stat-dosen-label">Dosen unik dimuat</span><strong id="stat-dosen">—</strong><small id="stat-dosen-note">Hasil API pada sesi halaman ini</small></article>
+      <article><span id="stat-dosen-label">Dosen unik tersimpan</span><strong id="stat-dosen">—</strong><small id="stat-dosen-note">Data semester hasil sinkronisasi</small></article>
       <article><span>Perguruan tinggi</span><strong id="stat-pt">—</strong><small id="stat-pt-note">Seluruh status PT</small></article>
-      <article><span>Program studi dimuat</span><strong id="stat-prodi">—</strong><small id="stat-prodi-note">Diambil sesuai kebutuhan</small></article>
-      <article class="coverage-card"><span>Cakupan pilihan</span><strong id="stat-coverage">Live</strong><small id="stat-coverage-note">Data API dimuat bertahap</small></article>
+      <article><span>Program studi</span><strong id="stat-prodi">—</strong><small id="stat-prodi-note">Diambil sesuai kebutuhan</small></article>
+      <article class="coverage-card"><span>Status data</span><strong id="stat-coverage">Live</strong><small id="stat-coverage-note">Data API dimuat bertahap</small></article>
     </section>
 
     <div id="notice" class="notice" role="status" aria-live="polite">Mengambil data langsung dari API PDDIKTI…</div>
@@ -34,17 +34,17 @@
     </nav>
 
     <section id="panel-dosen" class="panel">
-      <div class="panel-heading"><div><h2>Daftar dosen</h2><p>Pilih PT/prodi untuk mempercepat hasil. Pencarian berlaku pada hasil yang telah dimuat.</p></div><div class="panel-actions"><button id="load-all" class="button secondary" type="button">Muat seluruh cakupan</button><button id="export" class="button" type="button" disabled>↓ Unduh CSV</button></div></div>
+      <div class="panel-heading"><div><h2>Daftar dosen</h2><p>Pencarian mencakup seluruh data tersimpan. Pilih PT/prodi untuk mempersempit hasil.</p></div><div class="panel-actions"><a class="button secondary" href="admin.html">Sinkronisasi data</a><button id="export" class="button" type="button" disabled>↓ CSV halaman ini</button></div></div>
       <form id="filters" class="filters" role="search">
-        <label class="search-label">Cari dosen<div class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" aria-label="Cari dosen" placeholder="Nama, NIDN/NUPTK, kampus, prodi…" autocomplete="off"><button id="search-clear" type="button" aria-label="Bersihkan pencarian" hidden>×</button></div></label>
+        <label class="search-label">Cari dosen<div class="search-box"><span aria-hidden="true">⌕</span><input id="search" maxlength="120" type="search" aria-label="Cari dosen" placeholder="Nama, NIDN/NUPTK, kampus, prodi…" autocomplete="off"><button id="search-clear" type="button" aria-label="Bersihkan pencarian" hidden>×</button></div></label>
         <label>Perguruan tinggi<select id="pt-filter"><option value="">Semua perguruan tinggi</option></select></label>
         <label>Program studi<select id="prodi-filter"><option value="">Semua program studi</option></select></label>
         <label>Status PT<select id="status-filter"><option value="">Semua status</option></select></label>
       </form>
-      <div class="search-actions"><p id="search-hint">Ketik untuk menyaring hasil yang dimuat. Enter untuk mencari langsung di PDDIKTI.</p><div><button id="search-back" type="button" class="text-button" hidden>Kembali ke direktori</button><button id="search-api" type="button" class="button secondary" disabled>Cari seluruh Aceh ↗</button></div></div>
+      <div class="search-actions"><p id="search-hint">Ketik untuk menyaring hasil yang dimuat. Enter untuk mencari langsung di PDDIKTI.</p><div><button id="search-api" type="button" class="button secondary">Cari dosen</button></div></div>
       <div class="table-toolbar"><span id="result-count" aria-live="polite">Memuat dosen…</span><div><button id="reset" type="button" class="text-button">Reset filter</button><label class="page-size">Baris <select id="page-size"><option>25</option><option>50</option><option>100</option></select></label></div></div>
       <div class="table-scroll"><table><thead><tr><th class="number-col" scope="col">No.</th><th scope="col"><button id="sort-name" class="sort-button" type="button">Nama dosen <span aria-hidden="true">↑</span></button></th><th scope="col">NIDN</th><th scope="col">Perguruan tinggi / Program studi</th><th scope="col">Status dosen</th><th scope="col"><span class="sr-only">Detail</span></th></tr></thead><tbody id="dosen-rows"><tr><td colspan="6" class="empty">Memuat data…</td></tr></tbody></table></div>
-      <nav class="pagination" aria-label="Navigasi halaman dosen"><div class="pagination-summary"><span id="row-range">Belum ada data</span><span id="page-info">Halaman —</span></div><div class="pagination-controls"><button id="prev" type="button" class="page-arrow" aria-label="Halaman sebelumnya" disabled>←</button><div id="page-numbers" class="page-numbers"></div><button id="next" type="button" class="page-arrow" aria-label="Halaman berikutnya" disabled>→</button></div><form id="jump-form" class="page-jump"><label for="jump-page">Ke halaman</label><input id="jump-page" type="number" min="1" value="1" inputmode="numeric" required><button type="submit" class="button secondary">Buka</button></form><div class="live-pagination-note"><span>Nomor halaman bertambah saat data baru dimuat. Halaman sebelumnya tidak meminta ulang data.</span><button id="load-more" class="button secondary" type="button">Muat lebih banyak</button></div></nav>
+      <nav class="pagination" aria-label="Navigasi halaman dosen"><div class="pagination-summary"><span id="row-range">Belum ada data</span><span id="page-info">Halaman —</span></div><div class="pagination-controls"><button id="prev" type="button" class="page-arrow" aria-label="Halaman sebelumnya" disabled>←</button><div id="page-numbers" class="page-numbers"></div><button id="next" type="button" class="page-arrow" aria-label="Halaman berikutnya" disabled>→</button></div><form id="jump-form" class="page-jump"><label for="jump-page">Ke halaman</label><input id="jump-page" type="number" min="1" value="1" inputmode="numeric" required><button type="submit" class="button secondary">Buka</button></form><div class="live-pagination-note"><span>Pagination mengambil satu halaman dari database. Halaman berikutnya disiapkan di latar belakang.</span></div></nav>
     </section>
 
     <section id="panel-pt" class="panel" hidden>
@@ -55,12 +55,12 @@
 
     <section id="panel-coverage" class="panel" hidden>
       <div class="panel-heading"><div><h2>Seberapa lengkap data ini?</h2><p id="scope">Cakupan mengikuti semester dan pelaporan perguruan tinggi di PDDIKTI.</p></div></div>
-      <div class="coverage-grid"><div><h3>Progres pemuatan API</h3><ol class="progress-list" id="progress"></ol><h3>Unduh hasil yang sudah dimuat</h3><div class="download-links"><button id="export-json" type="button">JSON sesi ini ↗</button><button id="export-csv" type="button">CSV sesuai filter ↗</button><button id="export-txt" type="button">Daftar nama sesuai filter ↗</button></div></div><div><h3>Identitas dan batas cakupan</h3><p>Data diambil langsung dari PDDIKTI. Hasil hanya ditampung sementara pada memori halaman; memuat ulang halaman atau mengambil data terbaru akan memulai sesi baru.</p><p>API homebase mengembalikan daftar per prodi. Karena belum ada endpoint gabungan seluruh dosen Aceh dengan pagination, halaman berikutnya memuat prodi berikutnya sesuai kebutuhan. Total akhir tersedia setelah seluruh cakupan selesai.</p><p>Gunakan <strong>Muat seluruh cakupan</strong> untuk menelusuri semua prodi pada PT/status yang dipilih. Ketik untuk menyaring hasil yang dimuat, atau pilih <strong>Cari seluruh Aceh</strong> untuk mencari nama/NIDN/NUPTK melalui API pencarian PDDIKTI dan mencocokkan kampusnya dengan daftar PT Aceh. Hasil pencarian API mengikuti data terkini dari sumber, terpisah dari direktori semester. Urutan alfabet direktori tersedia setelah cakupan selesai dimuat. Pemuatan dapat dijeda.</p><p>Dosen digabung berdasarkan NIDN, NUPTK, atau ID SDM. Dosen bernama sama tidak digabung hanya berdasarkan nama.</p><p id="count-differences" hidden></p><p>Unduhan berisi hasil yang sudah dimuat, dan CSV mencatat satu baris per afiliasi. Cakupan mengikuti pelaporan homebase PDDIKTI untuk semester terpilih.</p></div></div>
+      <div class="coverage-grid"><div><h3>Data tersimpan</h3><ol class="progress-list" id="progress"></ol><h3>Unduh halaman saat ini</h3><div class="download-links"><button id="export-json" type="button">JSON halaman ini ↗</button><button id="export-csv" type="button">CSV halaman ini ↗</button><button id="export-txt" type="button">Nama pada halaman ini ↗</button></div></div><div><h3>Identitas dan batas cakupan</h3><p>Data diambil dari PDDIKTI melalui sinkronisasi, lalu disimpan di Supabase. Pencarian dan pagination membaca database, sehingga tidak menunggu API PDDIKTI setiap kali digunakan.</p><p>Sinkronisasi menyimpan progres dan dapat dilanjutkan. Pada sinkronisasi pertama, dosen yang sudah terkumpul ditampilkan bertahap dengan label cakupan sementara. Pembaruan berikutnya tetap menampilkan data lengkap lama hingga semua PT, prodi, dan homebase selesai. Waktu pembaruan terakhir terlihat di bagian atas.</p><p>Dosen digabung berdasarkan NIDN, NUPTK, atau ID SDM. Nama yang sama dengan identitas berbeda tetap terpisah.</p><p id="count-differences" hidden></p><p>Unduhan berisi hasil pada halaman yang sedang ditampilkan, dan CSV mencatat satu baris per afiliasi. Cakupan mengikuti pelaporan homebase PDDIKTI untuk semester terpilih.</p></div></div>
       <div id="error-section" hidden><h3>Permintaan yang perlu diulang</h3><p>Klik Muat lebih banyak untuk mencoba lagi atau Ambil data terbaru untuk memulai sesi baru.</p><ul id="errors" class="error-list"></ul></div>
     </section>
-    <footer><span>Direktori Dosen Aceh</span><p>Data langsung dari <a href="https://pddikti.kemdiktisaintek.go.id" target="_blank" rel="noopener noreferrer">API PDDIKTI</a> · Dimuat sesuai kebutuhan.</p></footer>
+    <footer><span>Direktori Dosen Aceh</span><p>Data bersumber dari <a href="https://pddikti.kemdiktisaintek.go.id" target="_blank" rel="noopener noreferrer">API PDDIKTI</a> · Disimpan di Supabase.</p></footer>
   </main>
   <dialog id="detail"><div class="dialog-top"><p class="eyebrow">PROFIL DOSEN</p><button id="close-detail" type="button" aria-label="Tutup detail">×</button></div><h2 id="detail-name"></h2><dl id="detail-facts"></dl><h3>Catatan homebase</h3><div id="detail-affiliations"></div><a id="detail-source" target="_blank" rel="noopener noreferrer">Lihat profil di PDDIKTI ↗</a></dialog>
-  <noscript><p class="notice">Aktifkan JavaScript untuk mengambil dan menampilkan data langsung dari API.</p></noscript>
+  <noscript><p class="notice">Aktifkan JavaScript untuk menampilkan data direktori.</p></noscript>
 </body>
 </html>

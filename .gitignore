@@ -1,7 +1,4 @@
 /work/
-/data/cache/
-/data/.collect.lock
-/data/*.tmp
 node_modules/
 .env
 .env.*

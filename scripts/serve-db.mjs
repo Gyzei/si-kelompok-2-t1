@@ -11,8 +11,9 @@ const port=Number(process.env.PORT||process.argv[2]||8787);
 http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
  if(routes[url.pathname])return routes[url.pathname](req,res);
- const file=url.pathname==='/'?'database.html':url.pathname==='/admin.html'?'admin.html':url.pathname.slice(1);
- if(!['database.html','admin.html'].includes(file)&&!/^assets\/[a-zA-Z0-9.-]+$/.test(file)){res.writeHead(404);res.end();return;}
+ const file=url.pathname==='/'?'index.html':url.pathname==='/admin.html'?'admin.html':url.pathname.slice(1);
+ if(!['index.html','admin.html'].includes(file)&&!/^assets\/[a-zA-Z0-9.-]+$/.test(file)){res.writeHead(404);res.end();return;}
  try{const data=await fs.readFile(file);res.writeHead(200,{'Content-Type':types[path.extname(file)]||'text/plain','Cache-Control':'no-cache'});res.end(data);}
  catch{res.writeHead(404);res.end();}
 }).listen(port,'127.0.0.1',()=>console.log('Direktori database: http://127.0.0.1:'+port));
+

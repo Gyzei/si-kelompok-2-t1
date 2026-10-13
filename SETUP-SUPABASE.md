@@ -43,13 +43,13 @@ Untuk pengumpulan besar, lebih praktis memakai terminal terpisah:
 npm run sync -- 20261
 ```
 
-Progres berada di Supabase. Jika PDDIKTI sedang gagal, perintah biasa berhenti setelah tiga kegagalan berturut-turut. Gunakan `npm run sync -- 20261 --retry` untuk melanjutkan percobaan otomatis dengan jeda bertambah hingga dua menit. HTTP 429 tetap mengikuti Retry-After. HTTP 400/401/403 menghentikan proses. Sinkronisasi memberi setiap request sumber waktu maksimal 60 detik; mode API langsung tetap memakai 20 detik. Jalankan lagi untuk melanjutkan. Data yang sedang ditampilkan tidak diganti oleh hasil parsial. Sinkronisasi awal dapat memerlukan waktu lama karena seluruh PT/prodi harus dibaca dari sumber.
+Progres berada di Supabase. Jika PDDIKTI sedang gagal, perintah biasa berhenti setelah tiga kegagalan berturut-turut. Gunakan `npm run sync -- 20261 --retry` untuk melanjutkan percobaan otomatis dengan jeda bertambah hingga dua menit. HTTP 429 tetap mengikuti Retry-After. HTTP 400/401/403 menghentikan proses. Sinkronisasi memberi setiap request sumber waktu maksimal 60 detik. Jalankan lagi untuk melanjutkan. Pada sinkronisasi pertama, data dosen ditampilkan bertahap dengan label cakupan sementara. Jika sudah ada data lengkap, pembaruan berikutnya tetap tidak menggantinya dengan hasil parsial. Sinkronisasi awal dapat memerlukan waktu lama karena seluruh PT/prodi harus dibaca dari sumber.
 
 Jika ingin membatalkan progres lama dan mengumpulkan ulang atau mengganti semester, jalankan `npm run sync -- 20261 --restart`. Ini membuat generasi baru; data lengkap yang aktif tetap tersedia sampai proses baru berhasil. Tidak dapat me-restart ketika worker lain masih memegang lease; tunggu worker selesai atau lease kedaluwarsa.
 
 ## 3. Deploy ke Vercel
 
-1. Simpan project di repository Git. Jangan commit `.env`, folder `data`, atau file berisi kredensial. Dataset lama tidak dibutuhkan.
+1. Simpan project di repository Git. Jangan commit `.env`, log lokal, atau file berisi kredensial.
 2. Di Vercel, pilih **Add New → Project**, lalu impor repository.
 3. Pilih framework **Other**, Node.js **24.x**. Build command `npm run build`, output directory `public`; konfigurasi ini juga ada di `vercel.json`.
 4. Di **Environment Variables**, isi `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, dan `SYNC_SECRET`. Terapkan pada Production; isi Preview hanya jika preview memang boleh menggunakan database tersebut.
@@ -68,7 +68,8 @@ Vercel Cron tidak dikonfigurasi otomatis: satu pemanggilan `/api/sync` hanya men
 
 - PT/prodi/homebase disimpan sementara per generasi. Langkah yang gagal tidak memajukan cursor dan dapat diulang.
 - Dosen dideduplikasi berdasarkan NIDN/NUPTK/ID SDM, termasuk hubungan identitas yang ditemukan di prodi berikutnya. Nama sama saja tidak cukup untuk menggabungkan dosen.
-- Hasil deduplikasi dipersiapkan dalam batch 500 dosen. Generasi aktif baru berubah dalam transaksi setelah seluruh batch berhasil. Satu generasi lengkap sebelumnya dipertahankan; generasi yang lebih lama dan respons mentah yang telah dipublikasikan dibersihkan.
+- Sinkronisasi pertama memperbarui tabel dosen setiap 20 prodi yang diproses. Data awal langsung bisa dicari, dengan indikator cakupan sementara dan refresh otomatis 30 detik.
+- Hasil deduplikasi akhir dipersiapkan dalam batch 500 dosen. Generasi aktif baru berubah dalam transaksi setelah seluruh batch berhasil. Satu generasi lengkap sebelumnya dipertahankan; generasi yang lebih lama dan respons mentah yang telah dipublikasikan dibersihkan.
 - Pencarian PostgreSQL memakai indeks GIN, mendukung beberapa kata dengan urutan bebas, prefix kata, aksen umum, kampus/prodi, dan NIDN/NUPTK lengkap yang cocok tepat. Filter PT/prodi/status diterapkan pada afiliasi yang sama.
 - Pagination menghitung seluruh hasil di database, mengembalikan hanya 25/50/100 nama per halaman, dengan urutan stabil. Browser menyimpan maksimal 20 respons selama satu menit di RAM dan menyiapkan halaman berikutnya. Pengetikan memakai debounce 350 ms.
 - Unduhan CSV/JSON/TXT berisi halaman yang sedang ditampilkan. CSV mencatat satu baris per afiliasi yang sesuai filter.
@@ -76,3 +77,4 @@ Vercel Cron tidak dikonfigurasi otomatis: satu pemanggilan `/api/sync` hanya men
 - Paket Supabase Free memiliki batas kapasitas/traffic dan dapat dijeda saat tidak aktif. Pantau ukuran tabel dan indeks setelah data lengkap masuk. Jangan menyimpan respons mentah tanpa batas.
 
 Referensi: [Supabase API keys](https://supabase.com/docs/guides/getting-started/api-keys), [Supabase pricing](https://supabase.com/pricing), [Vercel Marketplace databases](https://vercel.com/docs/marketplace-storage), [Vercel Cron limits](https://vercel.com/docs/cron-jobs/usage-and-pricing).
+

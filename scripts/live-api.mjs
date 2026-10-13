@@ -1,20 +1,10 @@
 import { SOURCE, unwrapPage, unwrapList } from './lib.mjs';
-import { resolveProfile } from './profile.mjs';
-import { pathToFileURL } from 'node:url';
+
+
 
 export function validateRequest(input) {
   const fail = message => { throw Object.assign(new Error(message),{status:400}); };
-  if (!input || typeof input !== 'object' || !['pt','prodi','dosen','search','profile'].includes(input.action)) fail('Permintaan API tidak valid.');
-  if(input.action==='search') {
-    const query=String(input.query||'').trim();
-    if(query.length<3||query.length>120)fail('Ketik minimal 3 karakter untuk pencarian API.');
-    return {action:'search',query};
-  }
-  if (input.action === 'profile') {
-    const nidn=String(input.nidn||''),nuptk=String(input.nuptk||''),nama=String(input.nama||'');
-    if ((nidn&&!/^\d{10}$/.test(nidn))||(nuptk&&!/^\d{16}$/.test(nuptk))||nama.length>200||(!nidn&&!nuptk&&!nama)) fail('Identitas profil tidak valid.');
-    return {action:'profile',nidn,nuptk,nama};
-  }
+  if (!input || typeof input !== 'object' || !['pt','prodi','dosen'].includes(input.action)) fail('Permintaan API tidak valid.');
   const semester=String(input.semester||'20261');
   if (!/^\d{4}[12]$/.test(semester)) fail('Semester tidak valid.');
   if (input.action==='pt') {
@@ -28,12 +18,11 @@ export function validateRequest(input) {
 }
 export async function liveApi(rawInput,{fetcher=fetch,timeoutMs=20000}={}) {
   const input=validateRequest(rawInput);
-  if (input.action==='profile') return resolveProfile(input,{fetcher});
+
   let endpoint,body;
   if (input.action==='pt') endpoint=`/v2/pt/search/filter?limit=15&page=${input.page}&provinsi=Prov.%20Aceh`;
   if (input.action==='prodi') endpoint=`/pt/prodi/${input.id}/${input.semester}`;
   if (input.action==='dosen') {endpoint=`/dosen/homebase?semester=${input.semester}`;body={id:input.id};}
-  if (input.action==='search') endpoint='/pencarian/dosen/'+encodeURIComponent(input.query);
   let response;
   try {response=await fetcher(SOURCE+'/api'+endpoint,{
     method:body?'POST':'GET',headers:{Accept:'application/json','Content-Type':'application/json',Referer:SOURCE+'/perguruan-tinggi',Origin:SOURCE,'User-Agent':'Mozilla/5.0'},
@@ -49,8 +38,7 @@ export async function liveApi(rawInput,{fetcher=fetch,timeoutMs=20000}={}) {
     });
     return {items,page:page.page,totalPages:page.totalPages,totalItems:page.totalItems,fetched_at};
   }
-  const items=unwrapList(data,input.action,{allowNull:['dosen','search'].includes(input.action)});
-  if(input.action==='search')return {items:items.map(d=>Object.fromEntries(['id','nama','nidn','nuptk','nama_pt','nama_prodi'].map(key=>[key,String(d[key]||'').trim()]))),fetched_at};
+  const items=unwrapList(data,input.action,{allowNull:input.action==='dosen'});
   if (input.action==='prodi') return {items:items.map(p=>{
     if (!p.id_sms||!p.nama_prodi) throw new Error('Identitas prodi tidak tersedia.');
     return {id:p.id_sms,id_pt:input.id,nama:String(p.nama_prodi).trim(),kode:String(p.kode_prodi||''),jenjang:String(p.jenjang_prodi||''),status:String(p.status_prodi||''),jumlah_dosen_api:p.jumlah_dosen};
@@ -60,8 +48,4 @@ export async function liveApi(rawInput,{fetcher=fetch,timeoutMs=20000}={}) {
     return Object.fromEntries(['id_sdm','nama_dosen','nidn','nuptk','pendidikan','status_aktif','ikatan_kerja'].map(key=>[key,String(d[key]||'').trim()]));
   }),empty_response:data.data===null,fetched_at};
 }
-if (process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
-  let input='';for await (const chunk of process.stdin) input+=chunk;
-  try {console.log(JSON.stringify(await liveApi(JSON.parse(input))));}
-  catch(error) {console.log(JSON.stringify({error:error.message,status:error.status||502,retryAfter:error.retryAfter||null}));}
-}
+

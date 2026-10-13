@@ -1,6 +1,7 @@
 import {randomUUID} from 'node:crypto';
 import {liveApi} from '../scripts/live-api.mjs';
 import {deduplicate} from '../scripts/lib.mjs';
+import {publishPreview,pruneLecturers} from './preview.mjs';
 
 export function retryDelay(error){
   if(error.status!==429)return 5000;
@@ -15,11 +16,16 @@ export async function syncStep(db,{semester='20261',restart=false,source=request
   const {run,task}=claim;
   try {
     let data;
+    if(run.phase==='dosen'){
+      const progress=await db.rpc('da_sync_status');
+      if(run.total_dosen===null||progress.prodi_processed%20===0)await publishPreview(db,run);
+    }
     if(task.action==='publish') {
       if(!run.plan_ready){
         const records=[];
         for(let offset=0;;offset+=500){const chunk=await db.rpc('da_sync_records',{p_run:run.id,p_offset:offset,p_limit:500});records.push(...chunk);if(chunk.length<500)break;}
         const lecturers=deduplicate(records).sort((a,b)=>a.nama.localeCompare(b.nama,'id')||a.id.localeCompare(b.id));
+        await pruneLecturers(db,run.id,lecturers);
         for(let offset=0;offset<Math.max(1,lecturers.length);offset+=500)await db.rpc('da_prepare_chunk',{p_run:run.id,p_owner:owner,p_offset:offset,p_items:lecturers.slice(offset,offset+500),p_total:lecturers.length});
         await db.rpc('da_plan_ready',{p_run:run.id,p_owner:owner,p_total:lecturers.length});
       }
