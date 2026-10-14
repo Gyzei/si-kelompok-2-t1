@@ -20,7 +20,7 @@ Halaman utama berada di `index.html`; halaman pengelola di `admin.html`. Jalanka
 
 Pada pengumpulan pertama, dosen ditampilkan bertahap setiap 20 prodi dengan label cakupan sementara dan refresh otomatis 30 detik. Setelah ada generasi lengkap, pembaruan berikutnya mempertahankan data aktif sampai seluruh generasi pengganti selesai.
 
-Pencarian dan pagination dijalankan di database. Browser menampung maksimal 20 respons selama satu menit di RAM dan menyiapkan halaman berikutnya. Unduhan CSV/JSON/TXT mencakup halaman yang ditampilkan. Website tidak memakai dataset lokal.
+Pencarian dan pagination dijalankan di database. Browser menampung maksimal 20 respons selama satu menit di RAM dan menyiapkan halaman berikutnya. CSV mencakup seluruh hasil filter dan pencarian. JSON/TXT mencakup halaman yang ditampilkan. Website tidak memakai dataset lokal.
 
 Sinkronisasi CLI memerlukan proses Node aktif dan koneksi internet. Halaman pengelola `/admin.html` juga dapat menggerakkan sinkronisasi menggunakan token. Workflow GitHub Actions opsional tersedia; lihat panduan setup untuk mengaktifkannya.
 
@@ -36,3 +36,4 @@ Sinkronisasi CLI memerlukan proses Node aktif dan koneksi internet. Halaman peng
 - `outputs/`: dokumentasi visual pemeriksaan, tidak dipublikasikan.
 
 Simpan secret hanya di `.env` atau environment variables server. Secret dan file kerja tidak masuk deployment.
+

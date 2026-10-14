@@ -74,9 +74,10 @@ Vercel Cron tidak dikonfigurasi otomatis: satu pemanggilan `/api/sync` hanya men
 - Hasil deduplikasi akhir dipersiapkan dalam batch 500 dosen. Generasi aktif baru berubah dalam transaksi setelah seluruh batch berhasil. Satu generasi lengkap sebelumnya dipertahankan; generasi yang lebih lama dan respons mentah yang telah dipublikasikan dibersihkan.
 - Pencarian PostgreSQL memakai indeks GIN, mendukung beberapa kata dengan urutan bebas, prefix kata, aksen umum, kampus/prodi, dan NIDN/NUPTK lengkap yang cocok tepat. Filter PT/prodi/status diterapkan pada afiliasi yang sama.
 - Pagination menghitung seluruh hasil di database, mengembalikan hanya 25/50/100 nama per halaman, dengan urutan stabil. Browser menyimpan maksimal 20 respons selama satu menit di RAM dan menyiapkan halaman berikutnya. Pengetikan memakai debounce 350 ms.
-- Unduhan CSV/JSON/TXT berisi halaman yang sedang ditampilkan. CSV mencatat satu baris per afiliasi yang sesuai filter.
+- CSV mengambil seluruh hasil filter dan pencarian dalam batch 500 dosen, dengan satu baris per afiliasi yang sesuai filter. JSON/TXT berisi halaman yang sedang ditampilkan. Jika data berubah atau request gagal saat CSV disiapkan, unduhan dibatalkan agar hasil parsial tidak dianggap lengkap.
 - Daftar dosen mengikuti homebase semester, bukan pencarian fuzzy nasional. Link biodata PDDIKTI mencari dan memeriksa ID profil resmi ketika dibuka.
 - Paket Supabase Free memiliki batas kapasitas/traffic dan dapat dijeda saat tidak aktif. Pantau ukuran tabel dan indeks setelah data lengkap masuk. Jangan menyimpan respons mentah tanpa batas.
 
 Referensi: [Supabase API keys](https://supabase.com/docs/guides/getting-started/api-keys), [Supabase pricing](https://supabase.com/pricing), [Vercel Marketplace databases](https://vercel.com/docs/marketplace-storage), [Vercel Cron limits](https://vercel.com/docs/cron-jobs/usage-and-pricing).
+
 

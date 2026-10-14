@@ -20,10 +20,9 @@
     </section>
 
     <section class="stats" aria-label="Ringkasan data">
-      <article><span id="stat-dosen-label">Dosen unik tersimpan</span><strong id="stat-dosen">—</strong><small id="stat-dosen-note">Data semester hasil sinkronisasi</small></article>
-      <article><span>Perguruan tinggi</span><strong id="stat-pt">—</strong><small id="stat-pt-note">Seluruh status PT</small></article>
-      <article><span>Program studi</span><strong id="stat-prodi">—</strong><small id="stat-prodi-note">Diambil sesuai kebutuhan</small></article>
-      <article class="coverage-card"><span>Status data</span><strong id="stat-coverage">Live</strong><small id="stat-coverage-note">Data API dimuat bertahap</small></article>
+      <article><span id="stat-dosen-label">Dosen unik tersimpan</span><strong id="stat-dosen">—</strong></article>
+      <article><span>Perguruan tinggi</span><strong id="stat-pt">—</strong></article>
+      <article><span>Program studi</span><strong id="stat-prodi">—</strong></article>
     </section>
 
     <div id="notice" class="notice" role="status" aria-live="polite">Mengambil data langsung dari API PDDIKTI…</div>
@@ -34,7 +33,7 @@
     </nav>
 
     <section id="panel-dosen" class="panel">
-      <div class="panel-heading"><div><h2>Daftar dosen</h2><p>Pencarian mencakup seluruh data tersimpan. Pilih PT/prodi untuk mempersempit hasil.</p></div><div class="panel-actions"><a class="button secondary" href="admin.html">Sinkronisasi data</a><button id="export" class="button" type="button" disabled>↓ CSV halaman ini</button></div></div>
+      <div class="panel-heading"><div><h2>Daftar dosen</h2><p>Pencarian mencakup seluruh data tersimpan. Pilih PT/prodi untuk mempersempit hasil.</p></div><div class="panel-actions"><a class="button secondary" href="admin.html">Sinkronisasi data</a><button id="export" class="button" type="button" disabled>↓ CSV hasil filter</button></div></div>
       <form id="filters" class="filters" role="search">
         <label class="search-label">Cari dosen<div class="search-box"><span aria-hidden="true">⌕</span><input id="search" maxlength="120" type="search" aria-label="Cari dosen" placeholder="Nama, NIDN/NUPTK, kampus, prodi…" autocomplete="off"><button id="search-clear" type="button" aria-label="Bersihkan pencarian" hidden>×</button></div></label>
         <label>Perguruan tinggi<select id="pt-filter"><option value="">Semua perguruan tinggi</option></select></label>
@@ -55,7 +54,7 @@
 
     <section id="panel-coverage" class="panel" hidden>
       <div class="panel-heading"><div><h2>Seberapa lengkap data ini?</h2><p id="scope">Cakupan mengikuti semester dan pelaporan perguruan tinggi di PDDIKTI.</p></div></div>
-      <div class="coverage-grid"><div><h3>Data tersimpan</h3><ol class="progress-list" id="progress"></ol><h3>Unduh halaman saat ini</h3><div class="download-links"><button id="export-json" type="button">JSON halaman ini ↗</button><button id="export-csv" type="button">CSV halaman ini ↗</button><button id="export-txt" type="button">Nama pada halaman ini ↗</button></div></div><div><h3>Identitas dan batas cakupan</h3><p>Data diambil dari PDDIKTI melalui sinkronisasi, lalu disimpan di Supabase. Pencarian dan pagination membaca database, sehingga tidak menunggu API PDDIKTI setiap kali digunakan.</p><p>Sinkronisasi menyimpan progres dan dapat dilanjutkan. Pada sinkronisasi pertama, dosen yang sudah terkumpul ditampilkan bertahap dengan label cakupan sementara. Pembaruan berikutnya tetap menampilkan data lengkap lama hingga semua PT, prodi, dan homebase selesai. Waktu pembaruan terakhir terlihat di bagian atas.</p><p>Dosen digabung berdasarkan NIDN, NUPTK, atau ID SDM. Nama yang sama dengan identitas berbeda tetap terpisah.</p><p id="count-differences" hidden></p><p>Unduhan berisi hasil pada halaman yang sedang ditampilkan, dan CSV mencatat satu baris per afiliasi. Cakupan mengikuti pelaporan homebase PDDIKTI untuk semester terpilih.</p></div></div>
+      <div class="coverage-grid"><div><h3>Data tersimpan</h3><ol class="progress-list" id="progress"></ol><h3>Unduh data</h3><div class="download-links"><button id="export-json" type="button">JSON halaman ini ↗</button><button id="export-csv" type="button">CSV seluruh hasil filter ↗</button><button id="export-txt" type="button">Nama pada halaman ini ↗</button></div></div><div><h3>Identitas dan batas cakupan</h3><p>Data diambil dari PDDIKTI melalui sinkronisasi, lalu disimpan di Supabase. Pencarian dan pagination membaca database, sehingga tidak menunggu API PDDIKTI setiap kali digunakan.</p><p>Sinkronisasi menyimpan progres dan dapat dilanjutkan. Pada sinkronisasi pertama, dosen yang sudah terkumpul ditampilkan bertahap dengan label cakupan sementara. Pembaruan berikutnya tetap menampilkan data lengkap lama hingga semua PT, prodi, dan homebase selesai. Waktu pembaruan terakhir terlihat di bagian atas.</p><p>Dosen digabung berdasarkan NIDN, NUPTK, atau ID SDM. Nama yang sama dengan identitas berbeda tetap terpisah.</p><p id="count-differences" hidden></p><p>CSV mencakup seluruh hasil filter dan pencarian, dengan satu baris per afiliasi yang sesuai filter. JSON dan daftar nama hanya mencakup halaman yang ditampilkan. Cakupan mengikuti pelaporan homebase PDDIKTI untuk semester terpilih.</p></div></div>
       <div id="error-section" hidden><h3>Permintaan yang perlu diulang</h3><p>Klik Muat lebih banyak untuk mencoba lagi atau Ambil data terbaru untuk memulai sesi baru.</p><ul id="errors" class="error-list"></ul></div>
     </section>
     <footer><span>Direktori Dosen Aceh</span><p>Data bersumber dari <a href="https://pddikti.kemdiktisaintek.go.id" target="_blank" rel="noopener noreferrer">API PDDIKTI</a> · Disimpan di Supabase.</p></footer>
@@ -64,3 +63,5 @@
   <noscript><p class="notice">Aktifkan JavaScript untuk menampilkan data direktori.</p></noscript>
 </body>
 </html>
+
+

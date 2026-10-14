@@ -1,9 +1,10 @@
+import {filteredCsv} from './export.mjs';
 import {DirectoryClient} from './database-client.mjs';
 import {enhanceSelects,syncSelect} from './search-select.js';
 import {pageNumbers} from './pagination.mjs';
 import {matchesText,tokens,searchScore} from './filter.mjs';
 const $=id=>document.getElementById(id),client=new DirectoryClient();
-const state={meta:null,rows:[],total:0,page:1,epoch:0,loading:false,error:'',desc:false,timer:null};
+const state={meta:null,rows:[],total:0,page:1,epoch:0,loading:false,error:'',desc:false,timer:null,exporting:false,exportMessage:null};
 const number=value=>Number(value||0).toLocaleString('id-ID');
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const filters=()=>({query:$('search').value.trim(),pt:$('pt-filter').value,prodi:$('prodi-filter').value,status:$('status-filter').value});
@@ -17,10 +18,10 @@ function period(value){if(!value)return 'Belum ada sinkronisasi';const year=Numb
 function render(){
  const meta=state.meta,complete=Boolean(meta?.updated_at),partial=Boolean(meta?.run_id&&!meta.updated_at),syncing=meta?.sync?.status==='running',paused=meta?.sync?.status==='paused',pt=meta?.perguruan_tinggi||[],prodi=meta?.prodi||[],pages=Math.max(1,Math.ceil(state.total/Number($('page-size').value))),f=filters();
  $('semester').textContent=period(meta?.semester);$('updated').textContent=meta?.updated_at?'Diperbarui '+new Date(meta.updated_at).toLocaleString('id-ID',{timeZone:'Asia/Bangkok'})+' UTC+7':syncing?'Sinkronisasi pertama berlangsung':paused?'Sinkronisasi pertama tertunda':meta?'Menunggu sinkronisasi pertama':'Database belum dihubungkan';
- $('stat-dosen').textContent=number(meta?.total_dosen);$('tab-count').textContent=number(meta?.total_dosen);$('stat-pt').textContent=number(pt.length);$('stat-pt-note').textContent='PT pada data tersimpan';
- const processed=prodi.filter(p=>p.jumlah_dosen_terambil!==null&&p.jumlah_dosen_terambil!==undefined).length; $('stat-prodi').textContent=number(prodi.length);$('stat-prodi-note').textContent=number(processed)+' dari '+number(prodi.length)+' prodi sudah diproses';$('stat-coverage').textContent=complete?'Tersimpan':partial?'Sebagian':syncing?'Memuat':paused?'Tertunda':meta?'Terhubung':'Setup';$('stat-coverage-note').textContent=complete?'Sinkronisasi lengkap':partial?'Data bertambah selama sinkronisasi':syncing?'Pengumpulan PDDIKTI berlangsung':paused?'Progres tersimpan di database':meta?'Siap untuk sinkronisasi pertama':'Hubungkan dan sinkronkan data';
+ $('stat-dosen').textContent=number(meta?.total_dosen);$('tab-count').textContent=number(meta?.total_dosen);$('stat-pt').textContent=number(pt.length);
+ const processed=prodi.filter(p=>p.jumlah_dosen_terambil!==null&&p.jumlah_dosen_terambil!==undefined).length; $('stat-prodi').textContent=number(prodi.length);
  $('notice').className='notice'+(state.error?' error':complete?' success':'');
- $('notice').textContent=state.error||(state.loading?'Mencari data di database…':complete?'Data tersimpan dari PDDIKTI. Pencarian mencakup seluruh data semester ini.':partial?'Cakupan sementara: '+number(processed)+' dari '+number(prodi.length)+' prodi sudah diproses. Data dosen akan bertambah selama sinkronisasi.':syncing?'Sinkronisasi pertama sedang berjalan. Data dosen akan tampil setelah pengumpulan dan pemeriksaan selesai.':paused?'Sinkronisasi pertama tertunda. Progres tersimpan; lanjutkan dari halaman pengelola.':'Database terhubung dan belum berisi data. Jalankan sinkronisasi dari halaman pengelola.');
+ $('notice').textContent=state.error||state.exportMessage||(state.loading?'Mencari data di database…':complete?'Data tersimpan dari PDDIKTI. Pencarian mencakup seluruh data semester ini.':partial?'Cakupan sementara: '+number(processed)+' dari '+number(prodi.length)+' prodi sudah diproses. Data dosen akan bertambah selama sinkronisasi.':syncing?'Sinkronisasi pertama sedang berjalan. Data dosen akan tampil setelah pengumpulan dan pemeriksaan selesai.':paused?'Sinkronisasi pertama tertunda. Progres tersimpan; lanjutkan dari halaman pengelola.':'Database terhubung dan belum berisi data. Jalankan sinkronisasi dari halaman pengelola.');
  $('search-clear').hidden=!$('search').value;
  $('result-count').textContent=number(state.total)+' dosen sesuai filter'+(partial?' · cakupan sementara':'');$('search-hint').textContent='Cari nama, NIDN/NUPTK, kampus, atau prodi. Hasil diperbarui saat mengetik.';
  const start=(state.page-1)*Number($('page-size').value);
@@ -33,7 +34,7 @@ function render(){
  $('page-numbers').innerHTML=pageNumbers(state.page,pages).map(p=>p==='…'?'<span class="page-ellipsis">…</span>':'<button class="page-number'+(p===state.page?' current':'')+'" type="button" data-page="'+p+'" aria-label="Halaman '+p+'"'+(p===state.page?' aria-current="page"':'')+'>'+number(p)+'</button>').join('');
  $('prev').disabled=state.loading||state.page===1;$('next').disabled=state.loading||state.page>=pages;$('jump-page').max=String(pages);$('jump-page').value=String(state.page);
  $('page-numbers').querySelectorAll('button').forEach(b=>b.disabled=state.loading);$('jump-form').querySelector('button').disabled=state.loading;
- $('sort-name').querySelector('span').textContent=state.desc?'↓':'↑';$('export').disabled=state.loading||!state.rows.length;
+ $('sort-name').querySelector('span').textContent=state.desc?'↓':'↑';$('export').disabled=state.exporting||state.loading||!state.rows.length;$('export-csv').disabled=state.exporting||state.loading||!state.rows.length;
  $('scope').textContent=partial?'Sinkronisasi pertama: dosen yang sudah terkumpul ditampilkan bertahap. Cakupan belum lengkap.':'Data tersimpan dari PDDIKTI. Pembaruan berikutnya tidak mengganti data lengkap lama hingga seluruh proses selesai.';
  $('progress').innerHTML=[['Perguruan tinggi',number(pt.length)+' PT'],['Homebase diproses',number(processed)+' / '+number(prodi.length)+' prodi'],['Dosen unik',number(meta?.total_dosen)],['Sinkronisasi terakhir',meta?.sync?.status==='paused'?'Tertunda':meta?.sync?.status==='running'?'Sedang berjalan':meta?.run_id?'Selesai':'Belum dijalankan']].map(([label,value])=>'<li><span>'+label+'</span><strong>'+escape(value)+'</strong></li>').join('');
  const different=prodi.filter(p=>p.jumlah_dosen_terambil!==null&&p.jumlah_dosen_terambil!==undefined&&p.jumlah_dosen_api!==p.jumlah_dosen_terambil).length;
@@ -76,8 +77,22 @@ $('dosen-rows').addEventListener('click',e=>{const button=e.target.closest('[dat
 });
 $('close-detail').addEventListener('click',()=>$('detail').close());
 function download(name,content,type){const url=URL.createObjectURL(new Blob([content],{type})),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function csv(){const cell=value=>{let text=String(value??'');if(/^[=+@-]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';},rows=[['Nama','NIDN','NUPTK','Perguruan tinggi','Program studi','Semester']];const f=filters();for(const row of state.rows)for(const a of row.afiliasi)if((!f.pt||a.id_pt===f.pt)&&(!f.prodi||a.id_prodi===f.prodi)&&(!f.status||a.status_pt===f.status))rows.push([row.nama,row.nidn,row.nuptk,a.nama_pt,a.nama_prodi,a.semester]);download('dosen-aceh-halaman-'+state.page+'.csv','\uFEFF'+rows.map(r=>r.map(cell).join(',')).join('\r\n'),'text/csv;charset=utf-8');}
+async function csv(){
+ if(state.exporting||state.loading||!state.rows.length)return;
+ const scope={...filters()},desc=state.desc;
+ state.exporting=true;state.error='';state.exportMessage='Menyiapkan CSV seluruh hasil filter…';render();
+ try{
+  const exporter=new DirectoryClient({ttl:0,max:1});
+  const rows=await exporter.all(scope,{desc,onProgress:(count,total)=>{state.exportMessage='Menyiapkan CSV: '+number(count)+' dari '+number(total)+' dosen…';render();}});
+  download('dosen-aceh-hasil-filter.csv',filteredCsv(rows,scope),'text/csv;charset=utf-8');
+  state.exportMessage='CSV siap: '+number(rows.length)+' dosen sesuai filter saat unduhan dimulai.';
+ }catch(error){state.exportMessage=null;state.error=error.message;}
+ finally{state.exporting=false;render();}
+}
 $('export').addEventListener('click',csv);$('export-csv').addEventListener('click',csv);$('export-json').addEventListener('click',()=>download('dosen-aceh-halaman-'+state.page+'.json',JSON.stringify({semester:state.meta?.semester,updated_at:state.meta?.updated_at,complete:Boolean(state.meta?.updated_at),page:state.page,total:state.total,dosen:state.rows},null,2),'application/json'));$('export-txt').addEventListener('click',()=>download('nama-dosen-halaman-'+state.page+'.txt',state.rows.map(r=>r.nama).join('\r\n'),'text/plain;charset=utf-8'));
 enhanceSelects(['pt-filter','prodi-filter','status-filter','page-size']);await load();
 
 setInterval(()=>{if(state.meta&&!state.meta.updated_at&&!state.loading)load({keepPage:true});},30000);
+
+
+

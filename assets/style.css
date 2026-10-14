@@ -180,7 +180,7 @@ h1 span {
 }
 .stats {
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:15px;
   margin-bottom:24px
 }
@@ -202,19 +202,6 @@ h1 span {
   font-size:30px;
   letter-spacing:-1px;
   line-height:1.3
-}
-.stats small {
-  font-size:10px;
-  color:var(--muted);
-  line-height:1.6
-}
-.stats .coverage-card {
-  background:var(--green);
-  border-color:var(--green);
-  color:white
-}
-.stats .coverage-card span,.stats .coverage-card small {
-  color:#c8d9d1
 }
 .notice {
   background:var(--amber);
@@ -793,7 +780,7 @@ dialog>a {
     grid-column:1 / -1
   }
   .stats {
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:1fr;
     margin-bottom:18px
   }
   .stats article {
@@ -805,9 +792,6 @@ dialog>a {
   }
   .stats article>span {
     font-size:10px
-  }
-  .stats small {
-    font-size:9px
   }
   .notice {
     font-size:11px;

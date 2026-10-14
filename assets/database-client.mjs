@@ -14,5 +14,17 @@ export class DirectoryClient {
  }
  meta(){return this.request({action:'meta'});}
  list(filters,page,size,desc=false){return this.request({action:'list',q:filters.query||'',pt:filters.pt||'',prodi:filters.prodi||'',status:filters.status||'',page,size,desc:desc?'1':'0'});}
+ async all(filters,{desc=false,onProgress=()=>{}}={}){
+  const scope={...filters},rows=[],ids=new Set();let run,total;
+  for(let page=1;;page++){
+   const result=await this.list(scope,page,500,desc);
+   if(page===1){run=result.run_id;total=Number(result.total);}
+   if(result.run_id!==run||Number(result.total)!==total)throw new Error('Data berubah selama unduhan. Silakan unduh ulang.');
+   for(const row of result.items){if(ids.has(row.id))throw new Error('Data berubah selama unduhan. Silakan unduh ulang.');ids.add(row.id);rows.push(row);}
+   onProgress(rows.length,total);
+   if(rows.length===total)return rows;
+   if(!result.items.length||rows.length>total)throw new Error('Unduhan belum lengkap. Silakan coba lagi.');
+  }
+ }
  clear(){this.cache.clear();}
 }
